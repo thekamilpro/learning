@@ -1,11 +1,25 @@
 function Set-TMServiceLogon{
+    [CmdletBinding()]
     param(
+        [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true)]
         [string]$ServiceName,
+
+        [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true)]
         [string]$NewPassword,
+        
+        [Parameter(ValueFromPipelineByPropertyName=$true)]
         [string]$NewUser,
+        
+        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
         [string[]]$ComputerName,
+
         [string]$ErrorLogFilePath
     )
+
+    BEGIN{}
+
+    Process{
+
     foreach ($computer in $COmputerName){
         $option = New-CimSessionOption -Protocol Wsman
         $Session = New-CimSession -SessionOption $option -ComputerName $COmputerName
@@ -22,4 +36,8 @@ function Set-TMServiceLogon{
         
         $Session | Remove-CimSession
     }#foreach
+    }#process
+
+    END{}
+
 }#function
