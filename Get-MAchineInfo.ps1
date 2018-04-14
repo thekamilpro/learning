@@ -1,43 +1,80 @@
 Function Get-MachineInfo {
     [CmdletBinding()]
     param(
-        [Parameter(ValueFromPipeline=$true,Mandatory=$true)]
-        [Alias('CN','MachineName','Name')]
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
+        [Alias('CN', 'MachineName', 'Name')]
         [string[]]$Computername,
 
         [string]$LogFauilurePath,
 
-        [ValidateSet('Wsman','Dcom')]
+        [ValidateSet('Wsman', 'Dcom')]
         [string]$Protocol = "wsman",
 
         [switch]$ProtocolFallback
     )
 
-    BEGIN{}
+    BEGIN {}
 
-    PROCESS{
-    foreach ($computer in $Computername){
+    PROCESS {
+        foreach ($computer in $Computername) {
 
-    #establish session protocol
-    if ($Protocol -eq 'Dcom'){
-        $option = New-CimSessionOption -Protocol Dcom
-    }
-    ELSE {
-        $option = New-CimSessionOption -Protocol Wsman
-    }
-    #Connect session
-    $session = New-CimSession -ComputerName $computer -SessionOption $option
+            # Establish session protocol
+            if ($Protocol -eq 'Dcom') {
+                $option = New-CimSessionOption -Protocol Dcom
+            }
+            ELSE {
+                $option = New-CimSessionOption -Protocol Wsman
+            }
+            #Connect session
+            $session = New-CimSession -ComputerName $computer -SessionOption $option
     
-    #query data
-    $os = Get-CimInstance -ClassName Win32_OperatingSystem -CimSession $session
+            # Query data
+            $os_params = @{'ClassName' = 'Win32_OperatingSystem'
+                'CimSession' = $Session
+            }
+            $os = Get-CimInstance @os_params
 
-    #CLose session
-    $session | Remove-CimSession
+            $cs_params = @{'ClassName' = 'Win32_ComputerSystem'
+                'CimSession' = $session
+            }
+            $cs = Get-CimInstance @cs_params
 
-    #Output data
-    $os | Select-Object -Property @{n='Computername';e={$computer}},Version,ServicePackMajorVersion
-    } #foreach
+            $sysdrive = $os.SystemDrive
+            $drive_params = @{'ClassName' = 'Win32_LogicalDisk'
+                'Filter' = "DeviceId='$sysdrive'"
+                'CimSession' = $session
+            }
+            $drive = Get-CimInstance @drive_params
+
+            $proc_params = @{'ClassName' = 'Win32_Processor'
+                'CimSession' = $session
+            }
+            $proc = Get-CimInstance @proc_params |
+                Select-Object -First 1
+
+            #CLose session
+            $session | Remove-CimSession
+
+            #Output data
+            $props = @{'ComputerName' = $computer
+                'OSVersion' = $os.Version
+                'SPVersion' = $os.ServicePackMajorVersion
+                'OSBuild' = $os.OSBuild
+                'Manufacturer' = $cs.Manufacturer
+                'Model' = $cs.Model
+                'Procs' = $cs.numberofprocessors
+                'Cores' = $cs.numberoflogicalprocessors
+                'RAM' = ($cs.totalphysicalmemory / 1GB)
+                'Arch' = $proc.addresswidth
+                'SysdriveFreeSpace' = $drive.FreeSpace
+            }
+            
+            $obj = New-Object -TypeName psobject -Property $props
+            Write-Output $obj
+        } #foreach
     } #Process
     END {}
 } #function
+
+Get-MachineInfo
 
