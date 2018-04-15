@@ -21,23 +21,42 @@ function Set-TMServiceLogon {
     Process {
 
         foreach ($computer in $COmputerName) {
+            
             $option = New-CimSessionOption -Protocol Wsman
+            #Connect session
             $Session = New-CimSession -SessionOption $option -ComputerName $COmputerName
 
-            If ($PSBoundParameters.ContainsKey('NewUser')) {$args} = @{'StartName' = $NewUser; 'StartPassword' = $NewPassword
+            If ($PSBoundParameters.ContainsKey('NewUser')) {
+                $args = @{'StartName' = $NewUser
+                        'StartPassword' = $NewPassword}
             } ELSE {
                 $args = @{'StartPassword' = $NewPassword}
             }
-
-            Invoke-CimMethod -Query "SELECT * FROM Win32_Service WHERE Name='$ServiceName'" `
-                -MethodName Change `
-                -ComputerName $computer `
-                -Arguments $args | Select-Object -Property @{n = 'ComputerName'; e = {$computer}}, @{n = 'Result'; e = {$_.ReturnValue}}
-        
+            #Change service
+            $params = @{'Query' = "SELECT * FROM Win32_Service WHERE Name='$ServiceName'"
+                                'MethodName' = 'Change'
+                                'ComputerName' = $computer
+                                'Arguments' = $args}
+            $ret = Invoke-CimMethod @params
+           
+            Switch ($ret.ReturnValue) {
+                "0" {$Status = "Success"}
+                "22" {$Status = 'Wrong user account'}
+                default {$Status = "Failed: $($ret.ReturnValue)"}
+            }
+           
+            #Close session
             $Session | Remove-CimSession
+            #Output data
+            $props = @{'ComputerName' = $computer
+                        'Statis' = $Status}
+            New-Object -TypeName psobject -Property $props
+            Write-Output $props
+
         }#foreach
     }#process
 
     END {}
 
 }#function
+
