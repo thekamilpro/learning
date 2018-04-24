@@ -26,9 +26,11 @@ Function Get-MachineInfo {
                 $option = New-CimSessionOption -Protocol Wsman
             }
             #Connect session
+            Write-Verbose "Connecting to $Computer over $protocol"
             $session = New-CimSession -ComputerName $computer -SessionOption $option
     
             # Query data
+            Write-Verbose "Querying from $Computer"
             $os_params = @{'ClassName' = 'Win32_OperatingSystem'
                 'CimSession' = $Session
             }
@@ -53,10 +55,13 @@ Function Get-MachineInfo {
                 Select-Object -First 1
 
             #CLose session
+            Write-Verbose "Closing session to $Computer"
             $session | Remove-CimSession
 
             #Output data
-            $props = @{'ComputerName' = $computer
+            Write-Verbose "Outputing from $computer"
+            $obj = [pscustomobject]@{
+                'ComputerName' = $computer
                 'OSVersion' = $os.Version
                 'SPVersion' = $os.ServicePackMajorVersion
                 'OSBuild' = $os.OSBuild
@@ -69,7 +74,6 @@ Function Get-MachineInfo {
                 'SysdriveFreeSpace' = $drive.FreeSpace
             }
             
-            $obj = New-Object -TypeName psobject -Property $props
             Write-Output $obj
         } #foreach
     } #Process
