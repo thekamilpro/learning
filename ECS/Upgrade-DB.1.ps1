@@ -1,5 +1,5 @@
 function Upgrade-DB {
- <#
+    <#
    .SYNOPSIS
    Tool to upgrade databases.
 
@@ -17,7 +17,7 @@ function Upgrade-DB {
     Password to the DB.
 
     .PARAMETER ComputerName
-    Name of the computer which runs the database
+    Name of the computer which runs the database. It can accept multiple computers.
 
     .PARAMETER DBName
     Database name.
@@ -31,19 +31,19 @@ function Upgrade-DB {
     [CmdletBinding()]
 
     param (
-        [Parameter(Mandatory = $true,ValueFromPipeline=$true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [String] $Path,
 
-        [Parameter(Mandatory = $true,ValueFromPipeline=$true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [String] $Username,
 
-        [Parameter(Mandatory = $true,ValueFromPipeline=$true)]
-        [String] $ComputerName,
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [String[]] $ComputerName,
 
-        [Parameter(Mandatory = $true,ValueFromPipeline=$true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [String] $DBName ,
 
-        [Parameter(Mandatory = $true,ValueFromPipeline=$true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [String] $DBPassword
     )
 
@@ -60,50 +60,54 @@ function Upgrade-DB {
     
     Process { 
 
-        Write-Verbose "Getting list of files"
-        $Files = Get-ChildItem -Path c:\temp -file | Where-Object {$_.Name -like "???.createtable.sql" -or $_.Name -like "???createtable.sql"} | Sort-Object -Property Name
+        foreach ($Computer in $ComputerName) {
+
+            Write-Verbose "Getting list of files"
+            $Files = Get-ChildItem -Path $Path -file | Where-Object {$_.Name -like "???.createtable.sql" -or $_.Name -like "???createtable.sql"} | Sort-Object -Property Name
     
-        [int]$Highest = $Files.name[-1] -replace '\D|^0+', ''
-        Write-Verbose -Message "Highest version is: $Highest"
+            [int]$Highest = $Files.name[-1] -replace '\D|^0+', ''
+            Write-Verbose -Message "Highest version is: $Highest"
             
-        $DBconnection_params = @{
-            'Username' = $Username
-            'Password' = $DBPassword
-            'Host'     = $ComputerName
-            'DBName'   = $DBName
-        }
+            $DBconnection_params = @{
+                'Username' = $Username
+                'Password' = $DBPassword
+                'Host'     = $Computer
+                'DBName'   = $DBName
+            }
 
-        #$Connection = ConnectTo-DB @DBConnection_params
-        #$DBVersion = $Connection | Get-DatabaseValue from -Table versionTable -Row version
+            #$Connection = ConnectTo-DB @DBConnection_params
+            #$DBVersion = $Connection | Get-DatabaseValue from -Table versionTable -Row version
 
-        [int]$DBVersion = 001 #I've hardcoded the DB version as I never used SQL 
+            [int]$DBVersion = 001 #I've hardcoded the DB version as I never used SQL 
 
-        IF ($Highest -eq $DBVersion) {
-            Write-Information "Database is up-to-date"
-        }
-        ELSE {
+            IF ($Highest -eq $DBVersion) {
+                Write-Information "Database is up-to-date"
+            }
+            ELSE {
             
-            ForEach ($File in $Files) { 
+                ForEach ($File in $Files) { 
 
-                [int]$FileVersion = $File.name -replace '\D|^0+', '' #Using REGEX to remove leading zeros, and non-digits from the file names
+                    [int]$FileVersion = $File.name -replace '\D|^0+', '' #Using REGEX to remove leading zeros, and non-digits from the file names
                 
-                IF ($FileVersion -ge $DBVersion) {
-                    Write-Verbose "Upgrading databe from Version $DBVersion to Version $FileVersion "
-                    & $Path\$File
+                    IF ($FileVersion -ge $DBVersion) {
+                        Write-Verbose "Upgrading databe on $Computer from Version $DBVersion to Version $FileVersion "
+                        & $Path\$File
                     
-                    #Set-DBVersion $FileVersion
-                    #DBVersion = $Connection | Get-DatabaseVersion -Table 'versionTable' -Row 'version'
+                        #Set-DBVersion $FileVersion
+                        #DBVersion = $Connection | Get-DatabaseVersion -Table 'versionTable' -Row 'version'
 
-                    $DBVersion = $FileVersion
-                } #IF
+                        $DBVersion = $FileVersion
+                    } #IF
 
-                ELSEIF ($DBVersion -ge $FileVersion) {
-                    Throw "Database is newer than the upgrade script"
-                } #ELSEIF
+                    ELSEIF ($DBVersion -ge $FileVersion) {
+                        Throw "Database is newer than the upgrade script on"
+                    } #ELSEIF
 
-            }#ForEach ($File in $Files)
+                }#ForEach ($File in $Files)
 
-        } #IF/ELSE $Highest -eq $DBVersion
+            } #IF/ELSE $Highest -eq $DBVersion
+
+        } #foreach #computer
 
     } #process
 
