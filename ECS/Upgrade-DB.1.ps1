@@ -1,4 +1,33 @@
 function Upgrade-DB {
+ <#
+   .SYNOPSIS
+   Tool to upgrade databases.
+
+   .DESCRIPTION
+   Use this tools to invoke SQL files against provided DB. It will search for files in format: 000.createtable.sql and 000createtable.sql.
+   The tool will check  the current version of database and execute only files with higher number in ascending version, updating the Database version.
+
+    .PARAMETER Path
+    Location where upgrade files are. Mandatory.
+
+    .PARAMETER Usernmae
+    User account which will login to database.
+
+    .PARAMETER DBPassword
+    Password to the DB.
+
+    .PARAMETER ComputerName
+    Name of the computer which runs the database
+
+    .PARAMETER DBName
+    Database name.
+
+    .EXAMPLE
+    Upgrade-DB -Path C:\Files -Username Bob -DBPassword Passw0rd -DBName Dev - Computername SQL1
+    This function will connect to Database Called "Dev" running on server "DQL1" using "Bob" as the username and "Passw0rd" as the password, executing files from "C:\Files" folder. 
+
+   #>
+
     [CmdletBinding()]
 
     param (
