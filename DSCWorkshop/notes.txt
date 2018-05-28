@@ -1,0 +1,10 @@
+Genrate MOF document
+Apply MOF
+
+Resource = PowershellModule
+
+DSC runs as LocalSystem
+
+Get-Command -Module PSDesiredStateConfiguration
+
+Modules must installed on all machines

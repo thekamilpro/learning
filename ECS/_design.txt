@@ -1,0 +1,25 @@
+Parameters:
+Path - <directory with .sql scripts> 
+Username - <username for the DB> 
+ComputerName - <DB host> 
+DBName - <DB name> 
+DBPassword - <DB password>
+
+In-Path, Get-FIles
+     for-each file like ???.createtable.sql or ???createtable.sql |
+        Sort-Objects by name, ascending
+
+ ???.higest = $HighestTableNumber
+ ??? = $TableNumber
+
+ $Connection = Connect-ToDatabase
+    $DBVersion = $Connection | Get-DatabaseVersion from -Table versionTable -Row version
+ 
+ IF $TABLENUMBER.highest is Higher than $HighestTableNumber then {Do nothing} ELSE {
+
+ }
+
+
+DB 10 FILE 20
+
+
