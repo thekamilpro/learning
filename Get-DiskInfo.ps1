@@ -20,7 +20,6 @@ Function Get-DiskInfo {
                 'RAM' = $props.TotalPhysicalMemory
             }  
             
-            
         } #foreach computer
             
     } #foreach domain
