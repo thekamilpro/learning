@@ -17,8 +17,12 @@ def add_student(name, student_id=332):
 student_list = get_students_titlecase()
 
 #Read-Host
-student_name = input("Enter student name: ")
-student_id = input("Enter student ID: ")
+def decision():
+    decision = input("Add new student?")
+    if decision == "Y":
+        student_name = input("Enter student name: ")
+        student_id = input("Enter student ID: ")
+        add_student(student_name, student_id)
+        print_students_titlecase()
 
-add_student(student_name, student_id)
-print_students_titlecase()
+decision()
