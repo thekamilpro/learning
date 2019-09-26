@@ -10,9 +10,9 @@ def print_students_titlecase():
     students_titlecase = get_students_titlecase()
     print(students_titlecase)
 
-def add_student(name):
+def add_student(name, student_id):
     students.append(name)
 
 student_list = get_students_titlecase()
 
-add_student("Mark")
+add_student("Mark", 332)
