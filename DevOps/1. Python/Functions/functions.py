@@ -14,6 +14,12 @@ def add_student(name, student_id=332):
     student = {"name": name, "student_id": student_id}
     students.append(student)
 
+def var_args (name, *args): #parameters *args takes multiple variables
+    print (name)
+    print (args)
+
 student_list = get_students_titlecase()
 
 add_student(name="Mark", student_id=15)
+
+var_args("Mark, Loves Python", None, "Hello", True)
