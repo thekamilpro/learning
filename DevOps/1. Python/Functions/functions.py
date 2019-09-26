@@ -13,6 +13,23 @@ def print_students_titlecase():
 def add_student(name, student_id=332):
     student = {"name": name, "student_id": student_id}
     students.append(student)
+
+def save_file(student):
+    try:
+        f = open("students.txt", "a") #w = writing; overwrite file; r = reading a text file; a = appending to a file; rb = read a binary file; wb = writing to a binary file
+        f.write(student + "\n")
+        f.close() #file must be closed to prevent memory leaks
+    except Exception:
+        print("Could not save file")
+
+def read_file():
+    try:
+        f = open("students.txt", "r")
+        for student in f.readlines():
+            add_student(student)
+        f.close()
+    except Exception:
+        print("Could not read file")
     
 student_list = get_students_titlecase()
 
