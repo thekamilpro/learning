@@ -37,9 +37,16 @@ student_list = get_students_titlecase()
 def decision():
     decision = input("Add new student?")
     if decision == "Y":
+
+        read_file()
+        print_students_titlecase()
+
         student_name = input("Enter student name: ")
         student_id = input("Enter student ID: ")
+        
         add_student(student_name, student_id)
+        save_file(student_name)
+
         print_students_titlecase()
 
 decision()
