@@ -2,7 +2,7 @@ students = []
 
 class Student:
 
-    school_name = "Springfield Elementary"
+    school_name = "Springfield Elementary" #this is attribute. Attributes are static (don't change)
 
     def __init__(self, name, student_id=332):
         self.name = name
