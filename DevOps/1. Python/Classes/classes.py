@@ -18,7 +18,16 @@ class Student:
     def get_school_name(self):
         return self.school_name
 
-# mark = Student("Mark")
-# print(mark)
+class HighSchoolStudent(Student): #inheriting from Student class
+    
+    school_name = "Springfield High School"
 
-print(Student.school_name)
+    def get_school_name(self):
+        return "This is a High School student"
+
+    def get_name_capitalize(self):
+        original_value = super().get_name_capitalize() #super is refering to the parent class
+        return original_value + "-HS"
+
+james = HighSchoolStudent("james")
+print(james.get_name_capitalize()) #it prints fine, as it inherited methods from Student class.
