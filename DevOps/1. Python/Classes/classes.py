@@ -1,10 +1,11 @@
+students = []
+
 class Student:
-    pass #pass is a keyword in Python meaning: Do nothing.
+    def add_student(self, name, student_id=332): #self refers to the instance of the class
+        student = {"name": name, "student_id": student_id}
+        students.append(student)
 
-student = Student() #defining new instance of Student class.
+student = Student()
+student.add_student("Mark")
 
-print(student)
-
-new_student = Student()
-
-print(new_student)
+print(students)
