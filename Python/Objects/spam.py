@@ -1,6 +1,7 @@
-def add_spam(menu=[]):
+def add_spam(menu=None):
+    if menu is None:
+        menu = []
     menu.append("spam")
     return menu
 
-breakfast = ['bacon','eggs']
-add_spam(breakfast)
+add_spam()
