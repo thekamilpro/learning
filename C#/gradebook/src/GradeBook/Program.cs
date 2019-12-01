@@ -3,31 +3,21 @@ using System.Collections.Generic;
 
 namespace GradeBook
 {
+
+ 
     class Program
     {
         static void Main(string[] args)
         {
 
-            var grades = new List<double>() {34.1, 35, 1.2};
-            grades.Add(56);
-        
-            var result = 0.0;
-            foreach (var number in grades)
-            {
-                result += number;
-            }
-             result /=  grades.Count;
+            var book = new Book("Kamil's Grade Book");
+            book.AddGrade(89.1);
+            book.AddGrade(90.1);
+            book.AddGrade(77.5);
+            book.ShowStatics();
 
-            System.Console.WriteLine($"The average grade is: {result}");
-
-            if(args.Length > 0)
-            {
-            Console.WriteLine($"Hello, {args[0]} !");
-            }
-            else
-            {
-                Console.WriteLine("Hello!");
-            }
         }
     }
+
+   
 }
