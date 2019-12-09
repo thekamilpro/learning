@@ -12,6 +12,28 @@ namespace GradeBook
             Name = name;
         }
 
+        public void AddGradeLetter(char letter)
+        {
+            switch(letter)
+            {
+                case 'A':
+                    AddGrade(90);
+                    break;
+
+                case 'B':
+                    AddGrade(80);
+                    break;
+
+                case 'C':
+                    AddGrade(70);
+                    break;
+
+                default:
+                    AddGrade(0);
+                    break;
+            }
+        }
+
         public void AddGrade(double grade)
         {
 
@@ -33,11 +55,13 @@ namespace GradeBook
             result.High = double.MinValue;
             result.Low = double.MaxValue;
 
-            foreach (var grade in grades)
+            
+            for (var index = 0; index < grades.Count; index =+ 1)
             {
-                result.Low = Math.Min(grade, result.Low);
-                result.High = Math.Max(grade, result.High);
-                result.Average += grade;
+                result.Low = Math.Min(grades[index], result.Low);
+                result.High = Math.Max(grades[index], result.High);
+                result.Average += grades[index];
+                
             }
             result.Average /= grades.Count;
 

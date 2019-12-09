@@ -5,6 +5,7 @@ namespace GradeBook.Tests
 {
     public class BookTests
     {
+        
         [Fact]
         public void BookCalculatesAnAverageGrades()
         {
