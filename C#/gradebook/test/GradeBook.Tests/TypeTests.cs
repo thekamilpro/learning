@@ -7,12 +7,6 @@ namespace GradeBook.Tests
     {
 
         [Fact]
-        public void StringBehavesLikeAValue()
-        {
-            
-        }
-
-        [Fact]
         public void ValueTypesAlsoPassByValue()
         {
         //Given
