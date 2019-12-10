@@ -20,12 +20,26 @@ namespace GradeBook
                 {
                     break;
                 }
-                else
+                
+                try
                 {
                     var grade = double.Parse(input);  //convert string to a number
                     book.AddGrade(grade);
                 }
+                catch(ArgumentException ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                catch(FormatException ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                finally
+                {
+                    System.Console.WriteLine("**");
+                }
             }
+            
             var stats = book.GetStatistics();
 
             System.Console.WriteLine($"The average grade is: {stats.Average:N1}");
