@@ -10,8 +10,6 @@ namespace GradeBook
 
             var book = new Book("Kamil's Grade Book");
 
-
-
             while (true)
             {
                 Console.WriteLine("Please provide a grade, or enter q to quit.");
