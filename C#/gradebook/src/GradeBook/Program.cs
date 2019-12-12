@@ -9,13 +9,17 @@ namespace GradeBook
         {
 
             var book = new Book("Kamil's Grade Book");
-
+            book.GradeAdded += OnGradeAdded;
+            book.GradeAdded += OnGradeAdded;
+            book.GradeAdded -= OnGradeAdded;
+            book.GradeAdded += OnGradeAdded;
+            
             while(true)
             {
                 Console.WriteLine("Please provide a grade, or enter q to quit.");
                 var input = Console.ReadLine(); //prompt for grade (it will be a string)
                 
-                if (input == "q" )
+                if(input == "q" )
                 {
                     break;
                 }
@@ -46,6 +50,11 @@ namespace GradeBook
             System.Console.WriteLine($"The smallest grade is: {stats.Low}");
             System.Console.WriteLine($"The letter grade is: {stats.Letter}");
 
+        }
+
+        static void OnGradeAdded(object sender, EventArgs e)
+        {
+            Console.WriteLine("A grade was added");
         }
     }
 
