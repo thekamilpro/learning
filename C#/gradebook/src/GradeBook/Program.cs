@@ -13,27 +13,40 @@ namespace GradeBook
             book.GradeAdded += OnGradeAdded;
             book.GradeAdded -= OnGradeAdded;
             book.GradeAdded += OnGradeAdded;
-            
-            while(true)
+
+            EnterGrades(book);
+
+            var stats = book.GetStatistics();
+
+            System.Console.WriteLine($"The average grade is: {stats.Average:N1}");
+            System.Console.WriteLine($"The maximum grade is: {stats.High}");
+            System.Console.WriteLine($"The smallest grade is: {stats.Low}");
+            System.Console.WriteLine($"The letter grade is: {stats.Letter}");
+
+        }
+
+        private static void EnterGrades(Book book)
+        {
+            while (true)
             {
                 Console.WriteLine("Please provide a grade, or enter q to quit.");
                 var input = Console.ReadLine(); //prompt for grade (it will be a string)
-                
-                if(input == "q" )
+
+                if (input == "q")
                 {
                     break;
                 }
-                
+
                 try
                 {
                     var grade = double.Parse(input);  //convert string to a number
                     book.AddGrade(grade);
                 }
-                catch(ArgumentException ex)
+                catch (ArgumentException ex)
                 {
                     Console.WriteLine(ex.Message);
                 }
-                catch(FormatException ex)
+                catch (FormatException ex)
                 {
                     Console.WriteLine(ex.Message);
                 }
@@ -42,14 +55,6 @@ namespace GradeBook
                     System.Console.WriteLine("**");
                 }
             }
-            
-            var stats = book.GetStatistics();
-
-            System.Console.WriteLine($"The average grade is: {stats.Average:N1}");
-            System.Console.WriteLine($"The maximum grade is: {stats.High}");
-            System.Console.WriteLine($"The smallest grade is: {stats.Low}");
-            System.Console.WriteLine($"The letter grade is: {stats.Letter}");
-
         }
 
         static void OnGradeAdded(object sender, EventArgs e)
