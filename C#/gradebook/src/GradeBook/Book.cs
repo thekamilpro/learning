@@ -18,16 +18,28 @@ namespace GradeBook
             set;
         }
     }
-    public class Book : NamedObject
+
+    public abstract class Book : NamedObject
+    {
+        public Book(string name) : base(name)
+        {
+        }
+
+        public abstract void AddGrade(double grade);
+        {
+            // ..
+        }
+    }
+    public class InMemoryBook : Book
     {
 
-        public Book(string name) : base (name)
+        public InMemoryBook(string name) : base (name)
         {
             grades = new List<double>();
             Name = name;
         }
 
-        public void AddGrade(char letter)
+        public override void AddGrade(char letter)
         {
             switch(letter)
             {
