@@ -1,0 +1,5 @@
+C:\dev\learning\C#\ACM\ACM.BL\bin\Debug\ACM.BL.dll
+C:\dev\learning\C#\ACM\ACM.BL\bin\Debug\ACM.BL.pdb
+C:\dev\learning\C#\ACM\ACM.BL\obj\Debug\ACM.BL.csprojAssemblyReference.cache
+C:\dev\learning\C#\ACM\ACM.BL\obj\Debug\ACM.BL.dll
+C:\dev\learning\C#\ACM\ACM.BL\obj\Debug\ACM.BL.pdb
