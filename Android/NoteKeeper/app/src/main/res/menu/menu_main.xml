@@ -9,6 +9,8 @@
         app:showAsAction="never" />
     <item
         android:id="@+id/action_next"
+        android:icon="@drawable/ic_forward_white_24dp"
         android:orderInCategory="101"
-        android:title="Next" />
+        android:title="Next"
+        app:showAsAction="ifRoom|withText" />
 </menu>
