@@ -5,4 +5,4 @@ Set-Location $naPath
 
 Import-Module Pester
 
-Invoke-Pester "$naPath\Podcast-NoAgenda.Module.Ver02.Tests.ps1"
+Invoke-Pester "$naPath\Podcast-NoAgenda.Module.Ver09.Tests.ps1"
