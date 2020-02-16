@@ -1,21 +1,45 @@
-﻿#$filePath = 'C:\PS\Pester-course\demo\module-02\Podcast-NoAgenda'
+﻿<#
+Special Note: In order to mock the Get-PodastData, we have to create a data
+block which emulates the RSS feed. To do so, we'll take the data returned
+by the Get-PodcastData function and export it to a file.
 
-# Execute the tested Get-PodcastData script so the function is
-# loaded in memory
-. .\function-Get-PodcastData.ps1
-
-# Get Podcast Data
   $data = Get-PodcastData
-  $data 
+  $data | Export-clixml 'C:\Temp\NoAgendaCli.xml'
 
-# Now use Export-CliXml. This will serialze the data to disk
-  $data | Export-clixml ".\NoAgendaCli.xml"
+Now we just open the file and paste it's content into the $mockRssDat variable
+in test below. This is a one time task done when this test was created. 
 
-# See what is in the file
-  psedit ".\NoAgendaCli.xml"
+Within the test, we'll need to turn the data back into a string. To do so,
+the PowerShell automation framework has a class called PSSerializer. Under the
+hood this is what the Import- and Export- Clixml cmdlets use. 
 
-# Test the deserialization
-  $mockedSerializedData= @'
+Here, we'll use the DeserializeAsList method in order to turn our string back
+into an array of objects, similar to what our modules Get-PodcastData function
+returns. 
+$rssData = [System.Management.Automation.PSSerializer]::DeserializeAsList($mockedSerializedData)
+
+We could also have chosen to use Import-Clixml and read in the 
+'C:\Temp\NoAgendaCli.xml' file:
+
+$rssData = Import-Clixml 'C:\Temp\mockdataserialized.xml'
+
+However it is generally best to keep your tests self contained, and not reliant
+on external objects as much as possible. 
+
+While this does seem like a lot of work, it's only needed once in order to
+mock the return values from our Get-PodcastData cmdlet. 
+#>
+
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+Get-Module Podcast-NoAgenda | Remove-Module -Force
+Import-Module $here\Podcast-NoAgenda.psm1 -Force
+
+InModuleScope Podcast-NoAgenda { 
+
+  Describe 'Get-PodcastImage Unit Tests' -Tags 'Unit' {
+  
+    $mockRssData = @'
 <Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
   <Obj RefId="0">
     <TN RefId="0">
@@ -218,6 +242,87 @@
   </Obj>
 </Objs>
 '@
+  
+    $rssData = [System.Management.Automation.PSSerializer]::DeserializeAsList($mockRssData)
+    
+    Context 'Unit Test Get-PodcastImage for each file' {
+      $downloadedImages = Get-PodcastImage -rssData $rssData `
+                                           -OutputPathFolder $TestDrive
 
-  $rssData = [System.Management.Automation.PSSerializer]::DeserializeAsList($mockedSerializedData)
-  $rssData
+      foreach($podcast in $rssData)
+      {
+        $imgFileName = $podcast.ImageURL.Split('/')[-1]
+        $outFileName = "$($TestDrive)$($imgFileName)"
+        It "Image $imgFileName should exist" {      
+          $outFileName | Should Exist
+        }
+
+        It "Image $imgFileName should exist in download list" {
+          [bool]($imgFileName -in $downloadedImages) | Should Be $true
+        }
+      } # foreach($podcast in $rssData)
+
+    } # Context 'Unit Test Get-PodcastImage for each file 
+
+  } # Describe 'Get-PodcastImage Unit Tests'
+
+} # InModuleScope Podcast-NoAgenda
+
+
+
+Describe 'Get-PodcastImage Acceptance Tests' -Tags 'Acceptance' {
+
+  InModuleScope Podcast-NoAgenda { 
+
+    $rssData = Get-PodcastData
+
+    # Unfortunately, to be able to test the default OutputPathFolder from the
+    # function, we have to hard code it here    
+    # Likewise, PodcastSight has given us a folder where everyone is to test
+    # from, so we'll have to hard code it as well
+    $root = 'C:\PS\Pester-course\demo\completed-final-module\'    
+    $defaultOutputPathFolder = "$($root)Podcast-Data\"
+    $testOutputPathFolder    = "$($root)Podcast-Test\"
+  
+    # Test one, test to assure images download to the default folder
+    Context 'Acceptance Test Get-PodcastImage default folder' {
+      # Get a list of images already present
+      $downloadedImages = Get-PodcastImage -rssData $rssData 
+
+      foreach($podcast in $rssData)
+      {
+        $imgFileName = $podcast.ImageURL.Split('/')[-1]
+        $outFileName = "$($defaultOutputPathFolder)$($imgFileName)"
+        It "Should have downloaded image $imgFileName" {      
+          $outFileName | Should Exist
+        }
+      }
+
+    } # Context 'Acceptance Test Get-PodcastImage default folder'
+
+    # Test two, ensure images download to the folder passed via parameter
+    Context 'Acceptance Test Get-PodcastImage default folder' {
+      $downloadedImages = Get-PodcastImage `
+                            -rssData $rssData `
+                            -OutputPathFolder $testOutputPathFolder
+
+      foreach($podcast in $rssData)
+      {
+        $imgFileName = $podcast.ImageURL.Split('/')[-1]
+        $outFileName = "$($testOutputPathFolder)$($imgFileName)"
+        It "Should have downloaded image $imgFileName" {      
+          $outFileName | Should Exist
+        }
+      }
+    } # Context 'Acceptance Test Get-PodcastImage default folder'
+
+  } # InModuleScope Podcast-NoAgenda
+
+} # Describe 'Get-PodcastImage Acceptance Tests'
+
+
+
+
+
+
+

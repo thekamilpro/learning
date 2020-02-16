@@ -1,18 +1,18 @@
-﻿#$filePath = 'C:\PS\Pester-course\demo\module-02\Podcast-NoAgenda'
+﻿$filePath = 'C:\PS\Pester-course\demo\module-02\Podcast-NoAgenda'
 
 # Execute the tested Get-PodcastData script so the function is
 # loaded in memory
-. .\function-Get-PodcastData.ps1
+. "$filePath\function-Get-PodcastData.ps1"
 
 # Get Podcast Data
   $data = Get-PodcastData
   $data 
 
 # Now use Export-CliXml. This will serialze the data to disk
-  $data | Export-clixml ".\NoAgendaCli.xml"
+  $data | Export-clixml "$filePath\NoAgendaCli.xml"
 
 # See what is in the file
-  psedit ".\NoAgendaCli.xml"
+  psedit "$filePath\NoAgendaCli.xml"
 
 # Test the deserialization
   $mockedSerializedData= @'

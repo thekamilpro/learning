@@ -1,21 +1,16 @@
-﻿#$filePath = 'C:\PS\Pester-course\demo\module-02\Podcast-NoAgenda'
+﻿$here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-# Execute the tested Get-PodcastData script so the function is
-# loaded in memory
-. .\function-Get-PodcastData.ps1
+Get-Module Podcast-NoAgenda | Remove-Module -Force
+Import-Module $here\Podcast-NoAgenda.psm1 -Force
 
-# Get Podcast Data
-  $data = Get-PodcastData
-  $data 
+Describe 'Get-NoAgenda Unit/Acceptance Tests' -Tags 'Unit', 'Acceptance' {
 
-# Now use Export-CliXml. This will serialze the data to disk
-  $data | Export-clixml ".\NoAgendaCli.xml"
+  InModuleScope Podcast-NoAgenda { 
 
-# See what is in the file
-  psedit ".\NoAgendaCli.xml"
-
-# Test the deserialization
-  $mockedSerializedData= @'
+    Context 'Get-NoAgenda Mock Tests' {
+      Mock Get-PodcastData {
+  
+        $mockRssData = @'
 <Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
   <Obj RefId="0">
     <TN RefId="0">
@@ -89,7 +84,7 @@
   <Obj RefId="5">
     <TNRef RefId="0" />
     <MS>
-      <S N="Title">814: Produce &amp; Pipelines</S>
+      <S N="Title">814: Produce and Pipelines</S>
       <S N="ShowUrl">http://814.noagendanotes.com</S>
       <S N="EmbeddedHTML">&lt;p&gt;Show Notes&lt;/p&gt;&lt;p&gt;_x000A_No Agenda Episode 814 - "Produce &amp; Pipelines"&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Produce &amp; Pipelines&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;audio src="http://mp3s.nashownotes.com/NA-814-2016-04-07-final.mp3" controls&gt;&lt;/audio&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://mp3s.nashownotes.com/NA-814-2016-04-07-final.mp3"&gt;&lt;img src="http://adam.curry.com/enc/20160407193233_na-814-art-sm.jpg" alt="A picture named NA-814-Art-SM" align="right" border="0" vspace="5" width="256" height="256" hspace="15"&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Direct [&lt;a href="http://mp3s.nashownotes.com/NA-814-2016-04-07-final.mp3"&gt;link&lt;/a&gt;] to the mp3 file&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://814.noagendanotes.com/"&gt; 814.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPFS Hash for the mp3: QmXYDEQwC6gikA9enYxkQ21HtUua2bs1ziE2chW5g7pm4i &lt;/p&gt;&lt;p&gt;_x000A_BitTorrentSync Secret: BBE35UBVKPKSUWGDLUZN5DIPFIB3TTQ5I&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Credits&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Produce &amp; Pipelines&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_Executive Producers: Thor Odelsting, Sir Henry P. Biglin, Jing Yu, Sir Smilesalot Ryan Merritt, Craig Lucca, Daniel J Franco&lt;/p&gt;&lt;p&gt;_x000A_Associate Executive Producers: Sir Sander Hoksbergen Baron of the Alps, JQ, Ron Nooren, Sean Regalado&lt;/p&gt;&lt;p&gt;_x000A_Become a member of the 814 Club, support the show &lt;a href="http://dvorak.org/na"&gt;here&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Knights &amp; Dames: Paul Webb -&gt; Sir Paul of Twickenham&lt;/p&gt;&lt;p&gt;_x000A_Art By: &lt;a href="http://noagendaartgenerator.com/artist/4"&gt;Patrick Buijs&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://814.noagendanotes.com/"&gt; 814.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com/"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPSH: QmXYDEQwC6gikA9enYxkQ21HtUua2bs1ziE2chW5g7pm4i &lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;New!&lt;/b&gt; &lt;a href="http://inthemorningzen.wordpress.com/2013/08/02/bittorrent-sync-the-no-agenda-show/"&gt;BitTorrent Sync&lt;/a&gt; the No Agenda Show&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Keywords&lt;/p&gt;</S>
       <S N="Hosts">Adam Curry and John C. Dvorak</S>
@@ -218,6 +213,129 @@
   </Obj>
 </Objs>
 '@
+        $rssData = [System.Management.Automation.PSSerializer]::DeserializeAsList($mockRssData)
+        return $rssData
+      
+      } -ModuleName Podcast-NoAgenda
+        
+      Mock Get-PodcastImage { } -ModuleName Podcast-NoAgenda
+      
+      Mock Get-PodcastMedia { } -ModuleName Podcast-NoAgenda
+      
+      Mock ConvertTo-PodcastHtml {
+        $mockHtml = '<body>mockmockmock</body>'
+        return $mockHtml
+      } -ModuleName Podcast-NoAgenda
+      
+      Mock Write-PodcastHtml { } -ModuleName Podcast-NoAgenda
+      
+      Mock ConvertTo-PodcastXml { 
+        $mockXml = '<Shows>mockmockmock</Show>'
+        return $mockXml
+      } -ModuleName Podcast-NoAgenda
+      
+      Mock Write-PodcastXml { } -ModuleName Podcast-NoAgenda
+      
+      Get-NoAgenda
 
-  $rssData = [System.Management.Automation.PSSerializer]::DeserializeAsList($mockedSerializedData)
-  $rssData
+      # Note with Assert-MockCalled, you do not have to pipe it to a Should
+      It 'should have called Get-PodcastData' {
+        Assert-MockCalled Get-PodcastData -ModuleName Podcast-NoAgenda 
+      }
+
+      It 'should have called Get-PodcastImage' {
+        Assert-MockCalled Get-PodcastImage -ModuleName Podcast-NoAgenda 
+      }
+
+      It 'should have called Get-PodcastMedia' {
+        Assert-MockCalled Get-PodcastMedia -ModuleName Podcast-NoAgenda 
+      }
+
+      It 'should have called ConvertTo-PodcastHtml' {
+        Assert-MockCalled ConvertTo-PodcastHtml -ModuleName Podcast-NoAgenda 
+      }
+
+      It 'should have called Write-PodcastHtml' {
+        Assert-MockCalled Write-PodcastHtml -ModuleName Podcast-NoAgenda 
+      }
+
+      It 'should have called ConvertTo-PodcastXml' {
+        Assert-MockCalled ConvertTo-PodcastXml -ModuleName Podcast-NoAgenda 
+      }
+
+      It 'should have called Write-PodcastXml' {
+        Assert-MockCalled Write-PodcastXml -ModuleName Podcast-NoAgenda 
+      }
+
+    } #Context 'Podcast-NoAgenda Tests'
+
+    # Note, once the Context block ended all of the Mocks and variables did too. 
+    # Any code here would not have access to them. 
+
+  } # InModuleScope Podcast-NoAgenda
+
+} # Describe 'Get-NoAgenda Unit/Acceptance Tests' -Tags 'Unit', 'Acceptance' 
+
+Describe 'Get-NoAgenda Acceptance Tests' -Tags 'Acceptance' {
+
+  InModuleScope Podcast-NoAgenda { 
+
+    Context 'Get-NoAgenda Acceptance Tests' {
+      # As the Get-NoAgenda mostly just calls the other functions, which are
+      # tested in other tests, the only real thing needed to test here is
+      # that the parameters passed in are correctly used. 
+          
+      # These are the defaults
+      $outputPath = 'C:\PS\Pester-course\demo\completed-final-module\Podcast-Data\'
+      $xmlFile = 'NoAgenda.xml'
+      $htmlFile = 'NoAgenda.html'
+      
+      $xmlPathFile = "$($outputPath)$xmlFile"
+      $htmlPathFile = "$($outputPath)$htmlFile"
+      
+      # Remove the default files if they were there before
+      Remove-Item $xmlPathFile  -ErrorAction SilentlyContinue
+      Remove-Item $htmlPathFile -ErrorAction SilentlyContinue
+      
+      # Use the defaults
+      Get-NoAgenda 
+      
+      It "should have created the default file of $xmlPathFile" {
+        $xmlPathFile | Should Exist
+      }
+      
+      It "should have created the default file $htmlPathFile" {
+        $htmlPathFile | Should Exist
+      }
+      
+      # Use something other than the defaults
+      $outputPath = 'C:\PS\Pester-course\demo\completed-final-module\Podcast-Data\'
+      $xmlFile = 'NoAgendaTest1.xml'
+      $htmlFile = 'NoAgendaTest1.html'
+      
+      $xmlPathFile = "$($outputPath)$xmlFile"
+      $htmlPathFile = "$($outputPath)$htmlFile"
+      
+      # Remove the test files if they were there from a previous run
+      Remove-Item $xmlPathFile  -ErrorAction SilentlyContinue
+      Remove-Item $htmlPathFile -ErrorAction SilentlyContinue
+      
+      # Execute with the parameters
+      Get-NoAgenda -OutputPathFolder $outputPath `
+                   -XmlFileName $xmlFile `
+                   -HtmlFileName $htmlFile 
+      
+      It "should have created the non-default of $xmlPathFile" {
+        $xmlPathFile | Should Exist
+      }
+      
+      It "should have created the non-default of $htmlPathFile" {
+        $htmlPathFile | Should Exist
+      }
+      
+      # Cleanup after ourselves
+      Remove-Item $xmlPathFile  -ErrorAction SilentlyContinue
+      Remove-Item $htmlPathFile -ErrorAction SilentlyContinue
+    } # Context 'Get-NoAgenda Acceptance Tests' 
+  } # InModuleScope Podcast-NoAgenda { 
+} # Describe 'Get-NoAgenda Acceptance Tests' -Tags 'Acceptance' 

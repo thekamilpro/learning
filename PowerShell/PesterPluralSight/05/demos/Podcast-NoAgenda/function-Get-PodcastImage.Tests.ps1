@@ -1,21 +1,45 @@
-﻿#$filePath = 'C:\PS\Pester-course\demo\module-02\Podcast-NoAgenda'
+﻿<#
+Special Note: In order to mock the Get-PodastData, we have to create a data
+block which emulates the RSS feed. To do so, we'll take the data returned
+by the Get-PodcastData function and export it to a file.
 
-# Execute the tested Get-PodcastData script so the function is
-# loaded in memory
-. .\function-Get-PodcastData.ps1
-
-# Get Podcast Data
   $data = Get-PodcastData
-  $data 
+  $data | Export-clixml 'C:\Temp\NoAgendaCli.xml'
 
-# Now use Export-CliXml. This will serialze the data to disk
-  $data | Export-clixml ".\NoAgendaCli.xml"
+Now we just open the file and paste it's content into the $mockRssDat variable
+in test below. This is a one time task done when this test was created. 
 
-# See what is in the file
-  psedit ".\NoAgendaCli.xml"
+Within the test, we'll need to turn the data back into a string. To do so,
+the PowerShell automation framework has a class called PSSerializer. Under the
+hood this is what the Import- and Export- Clixml cmdlets use. 
 
-# Test the deserialization
-  $mockedSerializedData= @'
+Here, we'll use the DeserializeAsList method in order to turn our string back
+into an array of objects, similar to what our modules Get-PodcastData function
+returns. 
+$rssData = [System.Management.Automation.PSSerializer]::DeserializeAsList($mockedSerializedData)
+
+We could also have chosen to use Import-Clixml and read in the 
+'C:\Temp\NoAgendaCli.xml' file:
+
+$rssData = Import-Clixml 'C:\Temp\mockdataserialized.xml'
+
+However it is generally best to keep your tests self contained, and not reliant
+on external objects as much as possible. 
+
+While this does seem like a lot of work, it's only needed once in order to
+mock the return values from our Get-PodcastData cmdlet. 
+#>
+
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+Get-Module Podcast-NoAgenda | Remove-Module -Force
+Import-Module $here\Podcast-NoAgenda.psm1 -Force
+
+Describe 'Get-PodcastImage Unit Tests Parameter' -Tags 'Unit' {
+
+  InModuleScope Podcast-NoAgenda { 
+  
+    $mockRssData = @'
 <Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
   <Obj RefId="0">
     <TN RefId="0">
@@ -23,71 +47,6 @@
       <T>System.Management.Automation.PSCustomObject</T>
       <T>System.Object</T>
     </TN>
-    <MS>
-      <S N="Title">819: non-binary person</S>
-      <S N="ShowUrl">http://819.noagendanotes.com/</S>
-      <S N="EmbeddedHTML">&lt;p&gt;Show Notes&lt;/p&gt;&lt;p&gt;_x000A_No Agenda Episode 819 - "non-binary person"&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;non-binary person&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;audio src="http://mp3s.nashownotes.com/NA-819-2016-04-24-Final.mp3" controls&gt;&lt;/audio&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://mp3s.nashownotes.com/NA-819-2016-04-24-Final.mp3"&gt;&lt;img src="http://adam.curry.com/enc/20160424194430_na-819-art-sm.jpg" alt="A picture named NA-819-Art-SM" align="right" border="0" vspace="5" width="256" height="256" hspace="15"&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Direct [&lt;a href="http://mp3s.nashownotes.com/NA-819-2016-04-24-Final.mp3"&gt;link&lt;/a&gt;] to the mp3 file&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://819.noagendanotes.com/"&gt; 819.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPFS Hash for the mp3: QmPCivKWXZnJUt6tfd4fN6JjzrUFhqyQemzih2sZGv1Z1M &lt;/p&gt;&lt;p&gt;_x000A_BitTorrentSync Secret: BBE35UBVKPKSUWGDLUZN5DIPFIB3TTQ5I&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Credits&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;non-binary person&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://wherethecstandsfor.com"&gt;Where The C Stands For&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Executive Producers: James Brown, Henry Cunningham&lt;/p&gt;&lt;p&gt;_x000A_Associate Executive Producers: Nick Johannes, Ben Smith&lt;/p&gt;&lt;p&gt;_x000A_Become a member of the 820 Club, support the show &lt;a href="http://dvorak.org/na"&gt;here&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Knights &amp; Dames: Nick Raimondi -&gt; Sir Raimondi&lt;/p&gt;&lt;p&gt;_x000A_Art By: &lt;a href="http://noagendaartgenerator.com/artwork/7260"&gt;Mark G&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://819.noagendanotes.com/"&gt; 819.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com/"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPSH: QmPCivKWXZnJUt6tfd4fN6JjzrUFhqyQemzih2sZGv1Z1M &lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;New!&lt;/b&gt; &lt;a href="http://inthemorningzen.wordpress.com/2013/08/02/bittorrent-sync-the-no-agenda-show/"&gt;BitTorrent Sync&lt;/a&gt; the No Agenda Show&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Keywords&lt;/p&gt;</S>
-      <S N="Hosts">Adam Curry and John C. Dvorak</S>
-      <S N="PublicationDate">Sun, 24 Apr 2016 20:08:15 GMT</S>
-      <S N="ImageUrl">http://adam.curry.com/enc/20160424200416_na-819-art-feed.jpg</S>
-      <S N="AudioUrl">http://mp3s.nashownotes.com/NA-819-2016-04-24-Final.mp3</S>
-      <S N="AudioLength">127171457</S>
-    </MS>
-  </Obj>
-  <Obj RefId="1">
-    <TNRef RefId="0" />
-    <MS>
-      <S N="Title">818: Document 17</S>
-      <S N="ShowUrl">http://818.noagendanotes.com/</S>
-      <S N="EmbeddedHTML">&lt;p&gt;Show Notes&lt;/p&gt;&lt;p&gt;_x000A_No Agenda Episode 818 - "Document 17"&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Document 17&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;audio src="http://mp3s.nashownotes.com/NA-818-2016-04-21-Final.mp3" controls&gt;&lt;/audio&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://mp3s.nashownotes.com/NA-818-2016-04-21-Final.mp3"&gt;&lt;img src="http://adam.curry.com/enc/20160421192753_na-818-art-sm.jpg" alt="A picture named NA-818-Art-SM" align="right" border="0" vspace="5" width="256" height="256" hspace="15"&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Direct [&lt;a href="http://mp3s.nashownotes.com/NA-818-2016-04-21-Final.mp3"&gt;link&lt;/a&gt;] to the mp3 file&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://818.noagendanotes.com/"&gt; 818.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPFS Hash for the mp3: &lt;/p&gt;&lt;p&gt;_x000A_BitTorrentSync Secret: BBE35UBVKPKSUWGDLUZN5DIPFIB3TTQ5I&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Credits&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Document 17&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://wherethecstandsfor.com"&gt;Where The C Stands For&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Executive Producers: Sir Dwayne Melancon Arch Duke of the Pacific Northwest, Uncle Dave&lt;/p&gt;&lt;p&gt;_x000A_Associate Executive Producer: Todd Troutman&lt;/p&gt;&lt;p&gt;_x000A_Club 818 Member: Sir Dwayne Melancon Arch Duke of the Pacific Northwest&lt;/p&gt;&lt;p&gt;_x000A_Become a member of the 819 Club, support the show &lt;a href="http://dvorak.org/na"&gt;here&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Knights &amp; Dames: Tim Khaner -&gt; Sir Tim, Knight of the No Agenda Roundtable&lt;/p&gt;&lt;p&gt;_x000A_Art By: Nick The Rat&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://818.noagendanotes.com/"&gt; 818.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com/"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPSH:&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;New!&lt;/b&gt; &lt;a href="http://inthemorningzen.wordpress.com/2013/08/02/bittorrent-sync-the-no-agenda-show/"&gt;BitTorrent Sync&lt;/a&gt; the No Agenda Show&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Keywords&lt;/p&gt;</S>
-      <S N="Hosts">Adam Curry and John C. Dvorak</S>
-      <S N="PublicationDate">Thu, 21 Apr 2016 19:51:33 GMT</S>
-      <S N="ImageUrl">http://adam.curry.com/enc/20160421195005_na-818-art-feed.jpg</S>
-      <S N="AudioUrl">http://mp3s.nashownotes.com/NA-818-2016-04-21-Final.mp3</S>
-      <S N="AudioLength">122273266</S>
-    </MS>
-  </Obj>
-  <Obj RefId="2">
-    <TNRef RefId="0" />
-    <MS>
-      <S N="Title">817: Sellout Politics</S>
-      <S N="ShowUrl">http://817.noagendanotes.com/</S>
-      <S N="EmbeddedHTML">&lt;p&gt;Show Notes&lt;/p&gt;&lt;p&gt;_x000A_No Agenda Episode 817 - "Sellout Politics"&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sellout Politics&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;audio src="http://mp3s.nashownotes.com/NA-817-2016-04-17-Final.mp3" controls&gt;&lt;/audio&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://mp3s.nashownotes.com/NA-817-2016-04-17-Final.mp3"&gt;&lt;img src="http://adam.curry.com/enc/20160417193253_na-817-art-sm.jpg" alt="A picture named NA-817-Art-SM" align="right" border="0" vspace="5" width="256" height="256" hspace="15"&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Direct [&lt;a href="http://mp3s.nashownotes.com/NA-817-2016-04-17-Final.mp3"&gt;link&lt;/a&gt;] to the mp3 file&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://817.noagendanotes.com/"&gt; 817.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPFS Hash for the mp3: QmR8RgVXCLjcD8AN1xGjq7hVB5Qj2d7geEvyzR1pupiATe &lt;/p&gt;&lt;p&gt;_x000A_BitTorrentSync Secret: BBE35UBVKPKSUWGDLUZN5DIPFIB3TTQ5I&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Credits&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sellout Politics&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://wherethecstandsfor.com"&gt;Where The C Stands For&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Executive Producers: Stone Harriman, Sir Sean Earl of Federal Reserve District 7, James Pyers,&lt;/p&gt;&lt;p&gt;_x000A_Associate Executive Producers: Kyle Ferencz, Timnonymous, Dame Sam Menner, Jesse Simonin&lt;/p&gt;&lt;p&gt;_x000A_Become a member of the 818 Club, support the show &lt;a href="http://dvorak.org/na"&gt;here&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Knights &amp; Dames: Richard Henderson -&gt; Sir Richard, Black Knight of the Foot&lt;/p&gt;&lt;p&gt;_x000A_Titles: Sir Herb Lamb -&gt; Baron of Buford Dam&lt;/p&gt;&lt;p&gt;_x000A_Art By: &lt;a href="http://noagendaartgenerator.com/artist/560"&gt;Mark G&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://817.noagendanotes.com/"&gt; 817.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com/"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPSH: QmR8RgVXCLjcD8AN1xGjq7hVB5Qj2d7geEvyzR1pupiATe &lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;New!&lt;/b&gt; &lt;a href="http://inthemorningzen.wordpress.com/2013/08/02/bittorrent-sync-the-no-agenda-show/"&gt;BitTorrent Sync&lt;/a&gt; the No Agenda Show&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Keywords&lt;/p&gt;</S>
-      <S N="Hosts">Adam Curry and John C. Dvorak</S>
-      <S N="PublicationDate">Sun, 17 Apr 2016 20:03:34 GMT</S>
-      <S N="ImageUrl">http://adam.curry.com/enc/20160420105437_na-817-art-feed.jpg</S>
-      <S N="AudioUrl">http://mp3s.nashownotes.com/NA-817-2016-04-17-Final.mp3</S>
-      <S N="AudioLength">131632256</S>
-    </MS>
-  </Obj>
-  <Obj RefId="3">
-    <TNRef RefId="0" />
-    <MS>
-      <S N="Title">816: Dehydrated in China</S>
-      <S N="ShowUrl">http://816.noagendanotes.com/</S>
-      <S N="EmbeddedHTML">&lt;p&gt;Show Notes&lt;/p&gt;&lt;p&gt;_x000A_No Agenda Episode 816 - "Dehydrated in China"&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Dehydrated in China&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;audio src="http://mp3s.nashownotes.com/NA-816-2016-04-14-Final.mp3" controls&gt;&lt;/audio&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://mp3s.nashownotes.com/NA-816-2016-04-14-Final.mp3"&gt;&lt;img src="http://adam.curry.com/enc/20160414193051_na-816-art-sm.jpg" alt="A picture named NA-816-Art-SM" align="right" border="0" vspace="5" width="256" height="256" hspace="15"&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Direct [&lt;a href="http://mp3s.nashownotes.com/NA-816-2016-04-14-Final.mp3"&gt;link&lt;/a&gt;] to the mp3 file&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://816.noagendanotes.com/"&gt; 816.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPFS Hash for the mp3: QmbbJBys5NzEuvD69woNRtg4H9NT7T7i8eyTwphVMBneyY &lt;/p&gt;&lt;p&gt;_x000A_BitTorrentSync Secret: BBE35UBVKPKSUWGDLUZN5DIPFIB3TTQ5I&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Credits&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Dehydrated in China&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_Executive Producers: Sir Snrkl, Sir K-Town&lt;/p&gt;&lt;p&gt;_x000A_Associate Executive Producers: Eric Olson, Sir Barislov Marinov, Bryan Mancuso-Sir Scheister Destroyer of Cones,  Anonymous, Jonathan Rowley, iAmsterdam&lt;/p&gt;&lt;p&gt;_x000A_Become a member of the 817 Club, support the show &lt;a href="http://dvorak.org/na"&gt;here&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Knights &amp; Dames: Bryan Mancuso -&gt; Sir Scheister, Destroyer of Cones, Jarrod Wolf -&gt; Sir Long Wolf of Vidor, Erik Olson -&gt; Sir Warbacon&lt;/p&gt;&lt;p&gt;_x000A_Titles: Sir K-Town -&gt; Baronet, Sir Ben Naidus -&gt; Baronet&lt;/p&gt;&lt;p&gt;_x000A_Art By: &lt;a href="http://noagendaartgenerator.com/artist/109"&gt;20wattbulb&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://wherethecstandsfor.com"&gt;Where The C Stands For&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://816.noagendanotes.com/"&gt; 816.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com/"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPSH: QmbbJBys5NzEuvD69woNRtg4H9NT7T7i8eyTwphVMBneyY &lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;New!&lt;/b&gt; &lt;a href="http://inthemorningzen.wordpress.com/2013/08/02/bittorrent-sync-the-no-agenda-show/"&gt;BitTorrent Sync&lt;/a&gt; the No Agenda Show&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Keywords&lt;/p&gt;</S>
-      <S N="Hosts">Adam Curry and John C. Dvorak</S>
-      <S N="PublicationDate">Thu, 14 Apr 2016 20:00:58 GMT</S>
-      <S N="ImageUrl">http://adam.curry.com/enc/20160414195932_na-816-art-sm.jpg</S>
-      <S N="AudioUrl">http://mp3s.nashownotes.com/NA-816-2016-04-14-Final.mp3</S>
-      <S N="AudioLength">126945217</S>
-    </MS>
-  </Obj>
-  <Obj RefId="4">
-    <TNRef RefId="0" />
-    <MS>
-      <S N="Title">815: Political Perp Walk</S>
-      <S N="ShowUrl">http://815.noagendanotes.com/</S>
-      <S N="EmbeddedHTML">&lt;p&gt;Show Notes&lt;/p&gt;&lt;p&gt;_x000A_No Agenda Episode 815 - "Political Perp Walk"&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Political Perp Walk&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;audio src="http://mp3s.nashownotes.com/NA-815-2016-04-10-Final.mp3" controls&gt;&lt;/audio&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://mp3s.nashownotes.com/NA-815-2016-04-10-Final.mp3"&gt;&lt;img src="http://adam.curry.com/enc/20160410153026_na-815-art-sm.jpg" alt="A picture named NA-815-Art-SM" align="right" border="0" vspace="5" width="256" height="256" hspace="15"&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Direct [&lt;a href="http://mp3s.nashownotes.com/NA-815-2016-04-10-Final.mp3"&gt;link&lt;/a&gt;] to the mp3 file&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://815.noagendanotes.com/"&gt; 815.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPFS Hash for the mp3: QmXBdPu9kkiBo718SFSj6unkUUkg32UfPfChpRhgqihykb &lt;/p&gt;&lt;p&gt;_x000A_BitTorrentSync Secret: BBE35UBVKPKSUWGDLUZN5DIPFIB3TTQ5I&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Credits&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Political Perp Walk&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_Executive Producers: Sir Stephen Hutto, David Killian, Jan Leclerc-Sir Kwyjiboo&lt;/p&gt;&lt;p&gt;_x000A_Associate Executive Producers: Richard Henderson, Baronet Sir Chris Speers, Sir Nick of the Southside, Sir Stewart Morrison&lt;/p&gt;&lt;p&gt;_x000A_Become a member of the 816 Club, support the show &lt;a href="http://dvorak.org/na"&gt;here&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Knights &amp; Dames: "Bright Eyes" -&gt; Black Dame Bright Eyes, Jan Leclerc -&gt; Sir Kwyjiboo (pronunciation kweejeeboo), Stewart Morrison -&gt; Sir Morrison&lt;/p&gt;&lt;p&gt;_x000A_Titles: Sir Chris Speers -&gt; Baronet&lt;/p&gt;&lt;p&gt;_x000A_Art By: &lt;a href="http://noagendaartgenerator.com/artist/10"&gt;Nick The Rat&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://815.noagendanotes.com/"&gt; 815.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com/"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPSH: QmXBdPu9kkiBo718SFSj6unkUUkg32UfPfChpRhgqihykb &lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;New!&lt;/b&gt; &lt;a href="http://inthemorningzen.wordpress.com/2013/08/02/bittorrent-sync-the-no-agenda-show/"&gt;BitTorrent Sync&lt;/a&gt; the No Agenda Show&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Keywords&lt;/p&gt;</S>
-      <S N="Hosts">Adam Curry and John C. Dvorak</S>
-      <S N="PublicationDate">Sun, 10 Apr 2016 19:42:44 GMT</S>
-      <S N="ImageUrl">http://adam.curry.com/enc/20160410194121_na-815-art-sm.jpg</S>
-      <S N="AudioUrl">http://mp3s.nashownotes.com/NA-815-2016-04-10-Final.mp3</S>
-      <S N="AudioLength">122169537</S>
-    </MS>
-  </Obj>
-  <Obj RefId="5">
-    <TNRef RefId="0" />
     <MS>
       <S N="Title">814: Produce &amp; Pipelines</S>
       <S N="ShowUrl">http://814.noagendanotes.com</S>
@@ -99,7 +58,7 @@
       <S N="AudioLength">123349429</S>
     </MS>
   </Obj>
-  <Obj RefId="6">
+  <Obj RefId="1">
     <TNRef RefId="0" />
     <MS>
       <S N="Title">813: Clinton Condign</S>
@@ -112,7 +71,7 @@
       <S N="AudioLength">112311070</S>
     </MS>
   </Obj>
-  <Obj RefId="7">
+  <Obj RefId="2">
     <TNRef RefId="0" />
     <MS>
       <S N="Title">812: Non-Disabled</S>
@@ -125,12 +84,12 @@
       <S N="AudioLength">121690246</S>
     </MS>
   </Obj>
-  <Obj RefId="8">
+  <Obj RefId="3">
     <TNRef RefId="0" />
     <MS>
       <S N="Title">811: Dead Men Can't Sue</S>
       <S N="ShowUrl">http://811.noagendanotes.com/</S>
-      <S N="EmbeddedHTML">&lt;p&gt;Show Notes&lt;/p&gt;&lt;p&gt;_x000A_No Agenda Episode 811 - "Dead Men Can't Sue"&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Dead Men Can't Sue&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;audio src="http://mp3s.nashownotes.com/NA-811-2016-03-27-Final.mp3" controls&gt;&lt;/audio&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://mp3s.nashownotes.com/NA-811-2016-03-27-Final.mp3"&gt;&lt;img src="http://adam.curry.com/enc/20160327154435_na-811-art-sm.jpg" alt="A picture named NA-811-Art-SM" align="right" border="0" vspace="5" width="256" height="256" hspace="15"&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Direct [&lt;a href="http://mp3s.nashownotes.com/NA-811-2016-03-27-Final.mp3"&gt;link&lt;/a&gt;] to the mp3 file&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://811.noagendanotes.com/"&gt; 811.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPFS Hash for the mp3: QmdZCSsfgzfj5LPZK4XtAA4YME2hKQJBP9t5dccA1XwGo5 &lt;/p&gt;&lt;p&gt;_x000A_BitTorrentSync Secret: BBE35UBVKPKSUWGDLUZN5DIPFIB3TTQ5I&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Credits&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Dead Men Can't Sue&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_Executive Producers: Jessie Lorenz Blind Dame of the SF Bay, Sir Phillip Rodokanakis &lt;/p&gt;&lt;p&gt;_x000A_Associate Executive Producers: Sir Matt McVader,-Knight of Edgewater, Sir Hank Scorpio of the Electrical Grid&lt;/p&gt;&lt;p&gt;_x000A_Become a member of the 812 Club, support the show &lt;a href="http://dvorak.org/na"&gt;here&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Knights &amp; Dames: Douglas Chick -&gt; Sir Hank Scorpio of the Electrical Grid, Matt McVader -&gt; Sir Matt McVader, Knight of Edgewater, Phillip Rodokanakis -&gt; Sir Rodokanakis, Jessie Lorenz -&gt; Blind Dame of the SF Bay&lt;/p&gt;&lt;p&gt;_x000A_Art By: &lt;a href="http://noagendaartgenerator.com/artist/10"&gt;Nick the Rat&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://811.noagendanotes.com/"&gt; 811.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com/"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPSH:QmdZCSsfgzfj5LPZK4XtAA4YME2hKQJBP9t5dccA1XwGo5 &lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;New!&lt;/b&gt; &lt;a href="http://inthemorningzen.wordpress.com/2013/08/02/bittorrent-sync-the-no-agenda-show/"&gt;BitTorrent Sync&lt;/a&gt; the No Agenda Show&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Keywords&lt;/p&gt;</S>
+      <S N="EmbeddedHTML">&lt;p&gt;Show Notes&lt;/p&gt;&lt;p&gt;_x000A_No Agenda Episode 811 - "Dead Men Can't Sue"&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Dead Men Can't Sue&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;audio src="http://mp3s.nashownotes.com/NA-811-2016-03-27-Final.mp3" controls&gt;&lt;/audio&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://mp3s.nashownotes.com/NA-811-2016-03-27-Final.mp3"&gt;&lt;img src="http://adam.curry.com/enc/20160327154435_na-811-art-sm.jpg" alt="A picture named NA-811-Art-SM" align="right" border="0" vspace="5" width="256" height="256" hspace="15"&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Direct [&lt;a href="http://mp3s.nashownotes.com/NA-811-2016-03-27-Final.mp3"&gt;link&lt;/a&gt;] to the mp3 file&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://811.noagendanotes.com/"&gt; 811.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPFS Hash for the mp3: QmdZCSsfgzfj5LPZK4XtAA4YME2hKQJBP9t5dccA1XwGo5 &lt;/p&gt;&lt;p&gt;_x000A_BitTorrentSync Secret: BBE35UBVKPKSUWGDLUZN5DIPFIB3TTQ5I&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Credits&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Dead Men Can't Sue&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_Executive Producers: Jessie Lorenz Blind Dame of the SF Bay, Sir Phillip Rodokanakis, &lt;/p&gt;&lt;p&gt;_x000A_Associate Executive Producers: Sir Matt McVader,-Knight of Edgewater, Sir Hank Scorpio of the Electrical Grid&lt;/p&gt;&lt;p&gt;_x000A_Become a member of the 812 Club, support the show &lt;a href="http://dvorak.org/na"&gt;here&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Knights &amp; Dames: Douglas Chick -&gt; Sir Hank Scorpio of the Electrical Grid, Matt McVader -&gt; Sir Matt McVader, Knight of Edgewater, Phillip Rodokanakis -&gt; Sir Rodokanakis, Jessie Lorenz -&gt; Blind Dame of the SF Bay&lt;/p&gt;&lt;p&gt;_x000A_Art By: &lt;a href="http://noagendaartgenerator.com/artist/10"&gt;Nick the Rat&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://811.noagendanotes.com/"&gt; 811.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com/"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPSH:QmdZCSsfgzfj5LPZK4XtAA4YME2hKQJBP9t5dccA1XwGo5 &lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;New!&lt;/b&gt; &lt;a href="http://inthemorningzen.wordpress.com/2013/08/02/bittorrent-sync-the-no-agenda-show/"&gt;BitTorrent Sync&lt;/a&gt; the No Agenda Show&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Keywords&lt;/p&gt;</S>
       <S N="Hosts">Adam Curry and John C. Dvorak</S>
       <S N="PublicationDate">Sun, 27 Mar 2016 19:58:25 GMT</S>
       <S N="ImageUrl">http://adam.curry.com/enc/20160327195705_na-811-art-sm.jpg</S>
@@ -138,7 +97,7 @@
       <S N="AudioLength">127537831</S>
     </MS>
   </Obj>
-  <Obj RefId="9">
+  <Obj RefId="4">
     <TNRef RefId="0" />
     <MS>
       <S N="Title">810: Karmonious</S>
@@ -151,7 +110,7 @@
       <S N="AudioLength">129302880</S>
     </MS>
   </Obj>
-  <Obj RefId="10">
+  <Obj RefId="5">
     <TNRef RefId="0" />
     <MS>
       <S N="Title">809: Velocity of Money</S>
@@ -164,7 +123,7 @@
       <S N="AudioLength">119565504</S>
     </MS>
   </Obj>
-  <Obj RefId="11">
+  <Obj RefId="6">
     <TNRef RefId="0" />
     <MS>
       <S N="Title">808: Happy Countries</S>
@@ -177,7 +136,7 @@
       <S N="AudioLength">133101569</S>
     </MS>
   </Obj>
-  <Obj RefId="12">
+  <Obj RefId="7">
     <TNRef RefId="0" />
     <MS>
       <S N="Title">807: Thanks Obama!</S>
@@ -190,7 +149,7 @@
       <S N="AudioLength">128244383</S>
     </MS>
   </Obj>
-  <Obj RefId="13">
+  <Obj RefId="8">
     <TNRef RefId="0" />
     <MS>
       <S N="Title">806: Babushkas of Chernobyl</S>
@@ -203,7 +162,7 @@
       <S N="AudioLength">136082833</S>
     </MS>
   </Obj>
-  <Obj RefId="14">
+  <Obj RefId="9">
     <TNRef RefId="0" />
     <MS>
       <S N="Title">805: Mono Nuptials</S>
@@ -216,8 +175,279 @@
       <S N="AudioLength">135988781</S>
     </MS>
   </Obj>
+  <Obj RefId="10">
+    <TNRef RefId="0" />
+    <MS>
+      <S N="Title">804: Evidence Free Zone</S>
+      <S N="ShowUrl">http://804.noagendanotes.com/</S>
+      <S N="EmbeddedHTML">&lt;p&gt;Show Notes&lt;/p&gt;&lt;p&gt;_x000A_No Agenda Episode 804 - "Evidence Free Zone"&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Evidence Free Zone&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;audio src="http://mp3s.nashownotes.com/NA-804-2016-03-03-Final.mp3" controls&gt;&lt;/audio&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://mp3s.nashownotes.com/NA-804-2016-03-03-Final.mp3"&gt;&lt;img src="http://adam.curry.com/enc/20160303203627_na-804-art-sm.jpg" alt="A picture named NA-804-Art-SM" align="right" border="0" vspace="5" width="256" height="256" hspace="15"&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Direct [&lt;a href="http://mp3s.nashownotes.com/NA-804-2016-03-03-Final.mp3"&gt;link&lt;/a&gt;] to the mp3 file&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://804.noagendanotes.com/"&gt; 804.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPFS Hash for the mp3: QmevDmqLLHaNWMBQucCRgnfwNGJHtnT5rJWuarGn99SzYa &lt;/p&gt;&lt;p&gt;_x000A_BitTorrentSync Secret: BBE35UBVKPKSUWGDLUZN5DIPFIB3TTQ5I&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Credits&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Evidence Free Zone&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_Executive Producer: Sir Edward of Bridgewater, Duke Thomas Nussbaum, Joseph Gilbert &lt;/p&gt;&lt;p&gt;_x000A_Associate Executive Producers: John Glover&lt;/p&gt;&lt;p&gt;_x000A_Become a member of the 805 Club, support the show &lt;a href="http://dvorak.org/na"&gt;here&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Titles: Dame Francine Hardaway -&gt; Baroness &lt;/p&gt;&lt;p&gt;_x000A_Art By: &lt;a href="http://noagendaartgenerator.com/artist/560"&gt;Mark G.&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://804.noagendanotes.com/"&gt; 804.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com/"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPSH: QmevDmqLLHaNWMBQucCRgnfwNGJHtnT5rJWuarGn99SzYa &lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;New!&lt;/b&gt; &lt;a href="http://inthemorningzen.wordpress.com/2013/08/02/bittorrent-sync-the-no-agenda-show/"&gt;BitTorrent Sync&lt;/a&gt; the No Agenda Show&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Keywords&lt;/p&gt;</S>
+      <S N="Hosts">Adam Curry and John C. Dvorak</S>
+      <S N="PublicationDate">Thu, 03 Mar 2016 21:01:33 GMT</S>
+      <S N="ImageUrl">http://adam.curry.com/enc/20160303210009_na-804-art-sm.jpg</S>
+      <S N="AudioUrl">http://mp3s.nashownotes.com/NA-804-2016-03-03-Final.mp3</S>
+      <S N="AudioLength">120827149</S>
+    </MS>
+  </Obj>
+  <Obj RefId="11">
+    <TNRef RefId="0" />
+    <MS>
+      <S N="Title">803: Joe Hitler</S>
+      <S N="ShowUrl">http://803.noagendanotes.com/</S>
+      <S N="EmbeddedHTML">&lt;p&gt;Show Notes&lt;/p&gt;&lt;p&gt;_x000A_No Agenda Episode 803 - "Joe Hitler"&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Joe Hitler&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;audio src="http://mp3s.nashownotes.com/NA-803-2016-02-28-Final.mp3" controls&gt;&lt;/audio&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://mp3s.nashownotes.com/NA-803-2016-02-28-Final.mp3"&gt;&lt;img src="http://adam.curry.com/enc/20160228210431_na-803-art-sm.jpg" alt="A picture named NA-803-Art-SM" align="right" border="0" vspace="5" width="256" height="256" hspace="15"&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Direct [&lt;a href="http://mp3s.nashownotes.com/NA-803-2016-02-28-Final.mp3"&gt;link&lt;/a&gt;] to the mp3 file&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://803.noagendanotes.com/"&gt; 803.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPFS Hash for the mp3: QmU2nkTGzMPXnVfn43JiMgRHJAyzx1MXJsMd9UZdnnC7L8 &lt;/p&gt;&lt;p&gt;_x000A_BitTorrentSync Secret: BBE35UBVKPKSUWGDLUZN5DIPFIB3TTQ5I&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Credits&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Joe Hitler&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_Executive Producer: Greg Davis &lt;/p&gt;&lt;p&gt;_x000A_Associate Executive Producers: James C Reeves, Mark Pleger, Sir Jojo&lt;/p&gt;&lt;p&gt;_x000A_Become a member of the 804 Club, support the show &lt;a href="http://dvorak.org/na"&gt;here&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Titles: Sir Guy Boazy -&gt; Black Baron&lt;/p&gt;&lt;p&gt;_x000A_Art By: &lt;a href="http://noagendaartgenerator.com/artist/443"&gt;Baron Nussbaum&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://803.noagendanotes.com/"&gt; 803.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com/"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPSH: QmU2nkTGzMPXnVfn43JiMgRHJAyzx1MXJsMd9UZdnnC7L8 &lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;New!&lt;/b&gt; &lt;a href="http://inthemorningzen.wordpress.com/2013/08/02/bittorrent-sync-the-no-agenda-show/"&gt;BitTorrent Sync&lt;/a&gt; the No Agenda Show&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Keywords&lt;/p&gt;</S>
+      <S N="Hosts">Adam Curry and John C. Dvorak</S>
+      <S N="PublicationDate">Sun, 28 Feb 2016 21:31:44 GMT</S>
+      <S N="ImageUrl">http://adam.curry.com/enc/20160228212927_na-803-art-sm.jpg</S>
+      <S N="AudioUrl">http://mp3s.nashownotes.com/NA-803-2016-02-28-Final.mp3</S>
+      <S N="AudioLength">140918521</S>
+    </MS>
+  </Obj>
+  <Obj RefId="12">
+    <TNRef RefId="0" />
+    <MS>
+      <S N="Title">802: Warehouse of Souls</S>
+      <S N="ShowUrl">http://802.noagendanotes.com</S>
+      <S N="EmbeddedHTML">&lt;p&gt;Show Notes&lt;/p&gt;&lt;p&gt;_x000A_No Agenda Episode 802 - "Warehouse of Souls"&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Warehouse of Souls&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;audio src="http://mp3s.nashownotes.com/NA-802-2016-02-25-Final.mp3" controls&gt;&lt;/audio&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://mp3s.nashownotes.com/NA-802-2016-02-25-Final.mp3"&gt;&lt;img src="http://adam.curry.com/enc/20160225203910_na-802-art-sm.jpg" alt="A picture named NA-802-Art-SM" align="right" border="0" vspace="5" width="256" height="256" hspace="15"&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Direct [&lt;a href="http://mp3s.nashownotes.com/NA-802-2016-02-25-Final.mp3"&gt;link&lt;/a&gt;] to the mp3 file&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://802.noagendanotes.com/"&gt; 802.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPFS Hash for the mp3:  QmS1iWtGNh7q3G9TQYm4CH6cwyBhcDXnUNHiW6stH6XHe6 &lt;/p&gt;&lt;p&gt;_x000A_BitTorrentSync Secret: BBE35UBVKPKSUWGDLUZN5DIPFIB3TTQ5I&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Credits&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Warehouse of Souls&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_Executive Producers: Anonymous Baron of Colfax CA, American Liberty, David Prince, John J Horner&lt;/p&gt;&lt;p&gt;_x000A_Associate Executive Producers: Chris Foster, Sir Cliff Howell, Eliezer Martinez, Sir Scott Thomson, Jacobus Boersma&lt;/p&gt;&lt;p&gt;_x000A_Become a member of the 803 Club, support the show &lt;a href="http://dvorak.org/na"&gt;here&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Knights &amp; Dames: Raun (rhymes with phone) Kilgo -&gt; Sir Therblig of the Digital Domain, Colin Sloman -&gt; Sir Horatio of Wandsworth, Black Knight, John J Horner -&gt; Sir John the Brewer, Scott Thomson -&gt; Sir Roadwolf, Knight of the Tonawandas&lt;/p&gt;&lt;p&gt;_x000A_Titles: Anonymous Knight in Colfax, CA -&gt; Baron of Colfax CA&lt;/p&gt;&lt;p&gt;_x000A_Art By: &lt;a href="http://noagendaartgenerator.com/artist/686"&gt;BohemianGroove&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://802.noagendanotes.com/"&gt; 802.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com/"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPSH: QmS1iWtGNh7q3G9TQYm4CH6cwyBhcDXnUNHiW6stH6XHe6 &lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;New!&lt;/b&gt; &lt;a href="http://inthemorningzen.wordpress.com/2013/08/02/bittorrent-sync-the-no-agenda-show/"&gt;BitTorrent Sync&lt;/a&gt; the No Agenda Show&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Keywords&lt;/p&gt;</S>
+      <S N="Hosts">Adam Curry and John C. Dvorak</S>
+      <S N="PublicationDate">Thu, 25 Feb 2016 21:09:20 GMT</S>
+      <S N="ImageUrl">http://adam.curry.com/enc/20160225210800_na-802-art-sm.jpg</S>
+      <S N="AudioUrl">http://mp3s.nashownotes.com/NA-802-2016-02-25-Final.mp3</S>
+      <S N="AudioLength">132518611</S>
+    </MS>
+  </Obj>
+  <Obj RefId="13">
+    <TNRef RefId="0" />
+    <MS>
+      <S N="Title">801: White Male Clerks</S>
+      <S N="ShowUrl">http://801.noagendanotes.com/</S>
+      <S N="EmbeddedHTML">&lt;p&gt;Show Notes&lt;/p&gt;&lt;p&gt;_x000A_No Agenda Episode 801 - "White Male Clerks"&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;White Male Clerks&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;audio src="http://mp3s.nashownotes.com/NA-801-2016-02-21-Final.mp3" controls&gt;&lt;/audio&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://mp3s.nashownotes.com/NA-801-2016-02-21-Final.mp3"&gt;&lt;img src="http://adam.curry.com/enc/20160221203409_na-801-art-sm.jpg" alt="A picture named NA-801-Art-SM" align="right" border="0" vspace="5" width="256" height="256" hspace="15"&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Direct [&lt;a href="http://mp3s.nashownotes.com/NA-801-2016-02-21-Final.mp3"&gt;link&lt;/a&gt;] to the mp3 file&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://801.noagendanotes.com/"&gt; 801.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPFS Hash for the mp3: QmYR4tjrPmQUipfqthXFXnBgYJX8S8dXhEAzD5e4J3RU7F &lt;/p&gt;&lt;p&gt;_x000A_BitTorrentSync Secret: BBE35UBVKPKSUWGDLUZN5DIPFIB3TTQ5I&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Credits&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Male White Clercks&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_Executive Producers: Alyssa Karounos, AJ of the one tree hill, Adriaan Spronk &lt;/p&gt;&lt;p&gt;_x000A_Associate Executive Producers: Sir ReadyKilowatt, Sandra Ferreira, Sir Donald Winkler Knight of the Bohemian Forest and the Barghain realm, Dwight Chick, Jeroen Huttinga&lt;/p&gt;&lt;p&gt;_x000A_Become a member of the 802 Club, support the show &lt;a href="http://dvorak.org/na"&gt;here&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Knights &amp; Dames: Kristina Caldwell -&gt; Dame Kristina, Donald Winkler -&gt; Sir Donald Winkler, Knight of the Bohemian Forest and the Berghain realm&lt;/p&gt;&lt;p&gt;_x000A_Art By: &lt;a href="http://noagendaartgenerator.com/artist/10"&gt;Nick The Rat&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://801.noagendanotes.com/"&gt; 801.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com/"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPSH: QmYR4tjrPmQUipfqthXFXnBgYJX8S8dXhEAzD5e4J3RU7F &lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;New!&lt;/b&gt; &lt;a href="http://inthemorningzen.wordpress.com/2013/08/02/bittorrent-sync-the-no-agenda-show/"&gt;BitTorrent Sync&lt;/a&gt; the No Agenda Show&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Keywords&lt;/p&gt;</S>
+      <S N="Hosts">Adam Curry and John C. Dvorak</S>
+      <S N="PublicationDate">Sun, 21 Feb 2016 21:04:22 GMT</S>
+      <S N="ImageUrl">http://adam.curry.com/enc/20160221210250_na-801-art-sm.jpg</S>
+      <S N="AudioUrl">http://mp3s.nashownotes.com/NA-801-2016-02-21-Final.mp3</S>
+      <S N="AudioLength">115889366</S>
+    </MS>
+  </Obj>
+  <Obj RefId="14">
+    <TNRef RefId="0" />
+    <MS>
+      <S N="Title">800: Toilet Wars</S>
+      <S N="ShowUrl">http://800.noagendanotes.com/</S>
+      <S N="EmbeddedHTML">&lt;p&gt;Show Notes&lt;/p&gt;&lt;p&gt;_x000A_No Agenda Episode 800 - "Toilet Wars"&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Toilet Wars&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;embed type="application/x-shockwave-flash" src="http://www.dvorak.org/blog/wp-content/uploads/2008/01/playersingle.swf" id="mymovie" name="mymovie" quality="high" flashvars="autoPlay=no&amp;amp;soundPath=http://mp3s.nashownotes.com/NA-800-2016-02-18-Final.mp3&amp;overColor=#ff0000" height="80" &gt;&lt;/embed&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://mp3s.nashownotes.com/NA-800-2016-02-18-Final.mp3"&gt;&lt;img src="http://adam.curry.com/enc/20160218210449_na-800-art-sm.jpg" alt="A picture named NA-800-Art-SM" align="right" border="0" vspace="5" width="256" height="256" hspace="15"&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Direct [&lt;a href="http://mp3s.nashownotes.com/NA-800-2016-02-18-Final.mp3"&gt;link&lt;/a&gt;] to the mp3 file&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://800.noagendanotes.com/"&gt; 800.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPFS Hash for the mp3: QmRzjWR2bPCnEHj5GvcyUV5vtssDNYCbbAu88um6UGV46P &lt;/p&gt;&lt;p&gt;_x000A_BitTorrentSync Secret: BBE35UBVKPKSUWGDLUZN5DIPFIB3TTQ5I&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Credits&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Toilet Wars&lt;/b&gt;&lt;/p&gt;&lt;p&gt;_x000A_Executive Producer: Benjamin Naidus, Sir Bashir, Sir Trevor Mudge, Anonymous, Sir Jojo the Network Chimp, Stephen Vorhees, Michael Hinz &lt;/p&gt;&lt;p&gt;_x000A_Associate Executive Producers: John Scales, Ron Gardner, Jack Smith, Ryan McCullough, Sir Adam Johnson Baron of the Bourbon Barrel Stout, Sir Robert Goshko Earl of Alberta, Ben Smith, Christine Bachman, Matthew Bellemare, Joshua Willis, John Robinette, Sir Kirk of the Happy Snowy Valley, Dennis Stephens, Baronet Sir Guy Boazy, Anonymous, Pnonymous&lt;/p&gt;&lt;p&gt;_x000A_Club 800 Members: Benjamin Naidus, Sir Bashir, Sir Trevor Mudge&lt;/p&gt;&lt;p&gt;_x000A_Become a member of the 801 Club, support the show &lt;a href="http://dvorak.org/na"&gt;here&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;Sign Up&lt;/b&gt; for the &lt;a href="http://www.dvorak.org/blog/no-agenda-mailing-list-signup-here/"&gt;newsletter&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Knights &amp; Dames: Douwe Andela -&gt; Sir D of Hollandsche Rading, Black Knight, Henry Reese -&gt; Sir Henry of Nagoya, Black Knight, Ben Smith -&gt; Sir Ben of Oakland, Order of The Economic Roundtable&lt;/p&gt;&lt;p&gt;_x000A_Titles: &lt;/p&gt;&lt;p&gt;_x000A_Art By: &lt;a href="http://noagendaartgenerator.com/artist/415"&gt;H@ssan M@ynard&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_ShowNotes Archive of links and Assets (clips etc) &lt;a href="http://800.noagendanotes.com/"&gt; 800.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_New: Directory Archive of Shownotes (includes all audio and video assets used) &lt;a href="http://archive.noagendanotes.com/"&gt;archive.noagendanotes.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_The No Agenda News Network- &lt;a href="http://noagendanewsnetwork.com/"&gt;noagendanewsnetwork.com&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_RSS Podcast&lt;a href="http://feed.nashownotes.com/rss.xml"&gt; Feed&lt;/a&gt; &lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://nanewsapp.com/"&gt;No Agenda News App&lt;/a&gt; for your iPhone and iPad&lt;/p&gt;&lt;p&gt;_x000A_Get the &lt;a href="http://www.noagendroid.com/"&gt;NoAgendDroid app&lt;/a&gt; for your Android Phone&lt;/p&gt;&lt;p&gt;_x000A_&lt;a href="http://bitlove.org/adamc1999/noagenda"&gt;Torrents&lt;/a&gt; of each episode via BitLove&lt;/p&gt;&lt;p&gt;_x000A_IPSH: QmRzjWR2bPCnEHj5GvcyUV5vtssDNYCbbAu88um6UGV46P &lt;/p&gt;&lt;p&gt;_x000A_&lt;b&gt;New!&lt;/b&gt; &lt;a href="http://inthemorningzen.wordpress.com/2013/08/02/bittorrent-sync-the-no-agenda-show/"&gt;BitTorrent Sync&lt;/a&gt; the No Agenda Show&lt;/p&gt;&lt;p&gt;_x000A_&lt;font size= -1&gt;&lt;script&gt;document.write("Last Modified " + document.lastModified)&lt;/script&gt;&lt;/font&gt;&lt;br&gt;&lt;a href="http://freedomcontroller.com"&gt;&lt;font size= -2&gt;This page created with the FreedomController&lt;/font&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;_x000A_Keywords&lt;/p&gt;</S>
+      <S N="Hosts">Adam Curry and John C. Dvorak</S>
+      <S N="PublicationDate">Thu, 18 Feb 2016 21:32:05 GMT</S>
+      <S N="ImageUrl">http://adam.curry.com/enc/20160218213050_na-800-art-sm.jpg</S>
+      <S N="AudioUrl">http://mp3s.nashownotes.com/NA-800-2016-02-18-Final.mp3</S>
+      <S N="AudioLength">139137487</S>
+    </MS>
+  </Obj>
 </Objs>
 '@
+  
+    $rssData = [System.Management.Automation.PSSerializer]::DeserializeAsList($mockRssData)
 
-  $rssData = [System.Management.Automation.PSSerializer]::DeserializeAsList($mockedSerializedData)
-  $rssData
+    <#--------------------------------------------------------------------------------------------------- 
+       For the first set of tests, we will call the function using an empty folder. The first will test 
+       calling using the parameter, the second using a parameter. 
+      
+       Since these are virtually identical, we'll use a simple loop and call the tests, just altering 
+       the call and the folder name
+    ---------------------------------------------------------------------------------------------------#>
+
+    $loops = 'parameter', 'pipeline'
+    foreach ($loop in $loops)
+    { 
+      Context "Unit Test Get-PodcastImage for each file using the $loop" {
+        # Because the TestDrive won't get cleared out between context calls we'll
+        # just create a subfolder for each test and put the files there
+        $testDriveFolder = "$($TestDrive)\$($loop)\"
+        New-Item $testDriveFolder -ItemType directory
+        
+        # The function calls Test-Path, we should Mock it
+        # Since this is an empty folder, Test-Path should always return false
+        Mock Test-Path { return $false }
+        
+        if ($loop -eq 'parameter')                             # Execute the function using a parameter
+          { $downloadedImages = Get-PodcastImage -rssData $rssData -OutputPathFolder $testDriveFolder }
+        else                                                   # Execute the function using the pipeline
+          { $downloadedImages = $rssData | Get-PodcastImage -OutputPathFolder $testDriveFolder }
+  
+        foreach($podcast in $rssData)
+        {
+          $imgFileName = $podcast.ImageURL.Split('/')[-1]
+          $outFileName = "$($testDriveFolder)$($imgFileName)"
+          It "Image $imgFileName should exist" {      
+            $outFileName | Should Exist
+          }
+  
+          It "Image $imgFileName should exist in download list" {
+            [bool]($imgFileName -in $downloadedImages) | Should Be $true
+          }
+        } # foreach($podcast in $rssData)
+  
+      } # Context "Unit Test Get-PodcastImage for each file using the $loop"
+    } # foreach ($loop in $loops)
+
+
+    <#--------------------------------------------------------------------------------------------------- 
+       In the second set of tests, we will fake an existing file, so that it will trigger the do not 
+       download flag within the function. This will let us know it is correctly skipping over files 
+       to preserve our bandwidth
+    ---------------------------------------------------------------------------------------------------#>
+    $loops = 'parameter', 'pipeline'
+    foreach ($loop in $loops)
+    { 
+      Context "Unit Test Get-PodcastImage $loop test with existing files" {
+        # Because the TestDrive won't get cleared out between context calls we'll
+        # just create a subfolder for each test and put the files there
+        $testDriveFolder = "$($TestDrive)\$($loop)Exist\"
+        New-Item $testDriveFolder -ItemType directory
+     
+        # For this test, we need to ensure it is not downloading files that
+        # already exist. To do so, we'll begin by taking the first seven files
+        # from our mock data and adding them to an array 
+        $existingFiles = @()
+        for ($x = 0; $x -lt 7; $x += 1) 
+          { $existingFiles += $($rssData[$x].ImageURL.Split('/')[-1]) }
+     
+        <#
+           Next we need to mock Test-Path, to fake the existance of one or more files. This triggers the
+           functions do not d/l me logic so we can test it. 
+           
+           Note we don't want to actually create files, we just need to have our fake Test-Path tell 
+           the Get-PodcastImage function they exist so it will not download them. We'll use the 
+           non-existance of the file in one of our tests.
+        #>
+        Mock Test-Path {
+          # Note the Mock automatically adds the $path variable based on the
+          # signature of Test-Path, i.e. its -Path parameter
+          $fileName = $path.Split('\')[-1]
+          if ($fileName -in $existingFiles)
+            { $retValue = $true }
+          else
+            { $retValue = $false }
+          return $retValue 
+        }
+     
+        if ($loop -eq 'parameter')                             # Execute the function using a parameter
+          { $downloadedImages = Get-PodcastImage -rssData $rssData -OutputPathFolder $testDriveFolder }
+        else                                                   # Execute the function using the pipeline
+          { $downloadedImages = $rssData | Get-PodcastImage -OutputPathFolder $testDriveFolder }
+        
+        # For the first test, ensure the files the function reported as downloaded actually were
+        foreach($imageFile in $downloadedImages)
+        {        
+          $outFileName = "$($testDriveFolder)$($imageFile)"
+          It "Image $imageFile have been downloaded, and thus should exist" {      
+            $outFileName | Should Exist
+          }     
+        } # foreach($podcast in $rssData)
+        
+        # For the files that are supposed to already exist, we'll do two tests
+        foreach ($imageFile in $existingFiles)
+        {
+          # First, we'll make sure the supposedly existing file was not reported as downloaded
+          It "$imageFile should not exist in the list of downloaded images" {
+            [bool]($imageFile -in $downloadedImages) | Should Be $false
+          }
+     
+          # Next, validate the file DOESN'T exist. In otherwords, since it wasn't supposed to download, 
+          # we'll make sure it didn't
+          $outFileName = "$($testDriveFolder)$($imageFile)"
+          It "$imageFile should not have been downloaded, and thus should not exist" {
+            $outFileName | Should Not Exist
+          }
+     
+        }
+     
+      } # Context "Unit Test Get-PodcastImage $loop test with existing files"
+    } # foreach ($loop in $loops)
+    
+  } # InModuleScope Podcast-NoAgenda
+
+} # Describe 'Get-PodcastImage Unit Tests'
+
+Describe 'Get-PodcastImage Acceptance Tests' -Tags 'Acceptance' {
+
+  InModuleScope Podcast-NoAgenda { 
+  
+    $rssData = Get-PodcastData
+
+    <#---------------------------------------------------------------------------------------------------
+       The only difference in our tests is:
+         1. The path to which things are downloaded to and
+         2. The way in which Get-PodcastImage is called. 
+       To keep from having a lot of repetitive code, the output folders are placed into a hash table, 
+       which is iterated over. The name is used in a switch to control which method to call 
+       Get-PodcastImage. The value is used for the folder to test in
+    ---------------------------------------------------------------------------------------------------#>
+
+    $root = 'C:\PS\Pester-course\demo\completed-final-module\'
+    $tests = @{ 'default parameter' = "$($root)Podcast-Data\";
+                'default pipeline'  = "$($root)Podcast-Data\";
+                'nondefault parameter' = "$($root)Podcast-Test\";
+                'nondefault pipeline'  = "$($root)Podcast-Test\";
+              }
+
+    # Note to iterate over a hash table, you have to use GetEnumerator to pop off each individual entry 
+    # in the hash table. Each entry will have two values, the Name (left side of =), and the Value 
+    # (right side of =)
+    foreach($test in $tests.GetEnumerator())
+    {
+      $folder = $test.Value 
+
+      # Get a list of images already present
+      $existingImages = Get-ChildItem "$($folder)*" -Include *.jpg, *.png |
+       Select-Object Name
+
+      # Call Get-PodcastImage based on which test we are running for
+      switch ($test.Name)
+      {
+        'default parameter'    
+           { $downloadedImages = Get-PodcastImage -rssData $rssData }
+        'default pipeline'     
+           { $downloadedImages = $rssData | Get-PodcastImage }
+        'nondefault parameter' 
+           { $downloadedImages = Get-PodcastImage -rssData $rssData `
+                                                  -OutputPathFolder $folder 
+           }
+        'nondefault pipeline'  
+           { $downloadedImages = $rssData | Get-PodcastImage -OutputPathFolder $folder }
+      } # switch ($test.Name)
+
+      # Use split to reduce the test name to either default or nondefault and parameter or pipeline.
+      # We'll use them in the context and test names to reduce their length
+      $dlFolder = $test.Name.Split(' ')[0]
+      $pipeParam = $test.Name.Split(' ')[1]
+
+      Context "Acceptance Test Get-PodcastImage $pipeParam test to $dlFolder folder" {
+        # Make sure all the files exist
+        foreach($podcast in $rssData)
+        {
+          $imgFileName = $podcast.ImageURL.Split('/')[-1]
+          $outFileName = "$($folder)$($imgFileName)"
+          It "image $imgFileName should exist in the $dlFolder folder" {      
+            $outFileName | Should Exist
+          }
+        }
+      
+        # Make sure downloaded images weren't in the list of existing ones
+        foreach ($img in $downloadedImages)
+        {
+          It "should have downloaded $img" {
+            [bool]($img -in $existingImages) | Should Be $false
+          }
+        }
+      
+      } # Context 'Acceptance Test Get-PodcastImage 
+
+      # Remove the images that were just downloaded so we can reset for next test
+      foreach ($img in $downloadedImages)
+      {
+        Remove-Item "$($folder)$($img)" -ErrorAction SilentlyContinue
+      }
+          
+    } # foreach($test in $tests.GetEnumerator())
+
+  } # InModuleScope Podcast-NoAgenda
+
+} # Describe 'Get-PodcastImage Acceptance Tests'
