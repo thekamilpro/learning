@@ -1,7 +1,6 @@
-
 class Flight:
     """A flight with a particular passenger aircraft."""
-    
+
     def __init__(self, number, aircraft):
         if not number[:2].isalpha():
             raise ValueError(f"No airline code in '{number}'")
@@ -15,7 +14,8 @@ class Flight:
         self._number = number
         self._aircraft = aircraft
         rows, seats = self._aircraft.seating_plan()
-        self._seating = [None] + [{letter: None for letter in seats} for _ in rows]
+        self._seating = [None] + \
+            [{letter: None for letter in seats} for _ in rows]
 
     def aircraft_model(self):
         return self._aircraft.model()
@@ -57,7 +57,7 @@ class Flight:
             raise ValueError(f"Invalid seat row {row_text}")
 
         if row not in rows:
-            raise ValueError(f"Invalid row number {row}")      
+            raise ValueError(f"Invalid row number {row}")
 
         return row, letter
 
@@ -83,8 +83,8 @@ class Flight:
 
     def num_available_seats(self):
         return sum(sum(1 for s in row.values() if s is None)
-        for row in self._seating
-        if row is not None)
+                   for row in self._seating
+                   if row is not None)
 
     def make_boarding_cards(self, card_printer):
         for passenger, seat in sorted(self._passenger_seats()):
@@ -98,42 +98,64 @@ class Flight:
                 if passenger is not None:
                     yield (passenger, f"{row}{letter}")
 
+
 class Aircraft:
 
-    def __init__(self, registration, model, num_rows, num_seats_per_row):
+    def __init__(self, registration):
         self._registration = registration
-        self._model = model
-        self._num_rows = num_rows
-        self._num_seats_per_row = num_seats_per_row
 
     def registration(self):
         return self._registration
 
+    def num_seats(self):
+        rows, rows_seats = self.seating_plan()
+        return len(rows) * len(rows_seats)
+
+class AirbusA319(Aircraft):
+
     def model(self):
-        return self._model
+        return "Airbus A319"
 
     def seating_plan(self):
-        return (range(1, self._num_rows + 1),
-        "ABCDEFGHJK"[:self._num_seats_per_row])
+        return (range(1, 23)), "ABCDEF"
 
-    def console_card_printer(self, passenger, seat, flight_number, aircraft):
-        output = f"| Name: {passenger}" \
-                 f" Flight: {flight_number}" \
-                f"  Seat: {seat}" \
-                    f"  Aircraft: {aircraft}" \
-                        " |"
-        banner = "+" + "-" * (len(output) -2) + "+"
-        border = "|" + " " * (len(output) -2) + "|"
-        lines = [banner, border, output, border, banner]
-        card = "\n".join(lines)
-        print(card)
-        print()
+class Boening777(Aircraft):
+   
+    def model(self):
+        return "Boening 777"
 
-    def make_flight(self):
-        f = Flight("BA758", Aircraft("G-EUPT", "Airbus A319", 22, 6))
+    def seating_plan(self):
+        return (range(1, 56)), "ABCDEGHJK"
+    
+
+    
+def console_card_printer(self, passenger, seat, flight_number, aircraft):
+    output = f"| Name: {passenger}" \
+                f" Flight: {flight_number}" \
+        f"  Seat: {seat}" \
+        f"  Aircraft: {aircraft}" \
+        " |"
+    banner = "+" + "-" * (len(output) - 2) + "+"
+    border = "|" + " " * (len(output) - 2) + "|"
+    lines = [banner, border, output, border, banner]
+    card = "\n".join(lines)
+    print(card)
+    print()
+
+    def make_flights(self):
+        
+        f = Flight("BA758", AirbusA319("G-EUPT"))
         f.allocate_seat("12A", "Guido van Rossum")
         f.allocate_seat("15F", "Bjarne Strosu")
         f.allocate_seat("15E", "Anders Hejsberg")
         f.allocate_seat("1C", "John McCarthy")
         f.allocate_seat("1D", "Rich Hickey")
-        return f
+
+        g = Flight("AF72", Boening777("F-GSPS"))
+        g.allocate_seat("12A", "Guido van Rossum")
+        g.allocate_seat("15F", "Bjarne Strosu")
+        g.allocate_seat("15E", "Anders Hejsberg")
+        g.allocate_seat("1C", "John McCarthy")
+        g.allocate_seat("1D", "Rich Hickey")
+        
+        return f, g
